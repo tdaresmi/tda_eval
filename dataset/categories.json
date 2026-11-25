@@ -1,0 +1,421 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_version": "0.1.0",
+  "dataset_status": "pilot",
+  "project": "TDA Eval",
+  "developer": "TDA",
+  "language": "tr",
+  "visibility": "public",
+  "license_policy": {
+    "project_code_license": "Apache-2.0",
+    "original_content_license": "Apache-2.0",
+    "third_party_allowed_licenses": ["Apache-2.0", "MIT", "BSD-3-Clause", "CC0-1.0", "CC-BY-4.0", "LicenseRef-PublicDomain"],
+    "explanation_tr": "Üç ayrı lisans kavramı vardır ve karıştırılmaz: (1) project_code_license: TDA Eval yazılımının (Space deposu) lisansı. (2) question.license: bir soru maddesinin veri setinde hangi lisansla dağıtıldığı; TDA'nın kendi yazdığı (original) maddeler için original_content_license (Apache-2.0). (3) question.source.license: üçüncü taraf kaynağın KENDİ lisansı; yalnızca third_party/public_domain maddelerde bulunur ve third_party_allowed_licenses listesinde olmak zorundadır. Lisansı belirsiz veya listede olmayan kaynaklar kullanılmaz."
+  },
+  "id_ranges": {
+    "real_dataset": { "min": 1, "max": 899 },
+    "fixture": { "min": 900, "max": 999 },
+    "policy_tr": "001-899 gerçek veri seti sorularıdır. 900-999 yalnızca test örnekleri (fixture) içindir; bu kimlikli maddeler split=fixture taşır, doğrulayıcı tarafından gerçek veri setine alınmaz ve questions.jsonl içinde bulunamaz."
+  },
+  "pilot_notice": {
+    "tr": "Bu veri seti bir PİLOT benchmark'tır: 100 soru (kategori başına 10). Bu boyut, modeller arasında istatistiksel olarak güvenilir bir sıralama yapmak için yeterli değildir. Küçük puan farkları şans eseri olabilir; sonuçlar kesin sıralama değil, yönlendirici gösterge olarak okunmalıdır.",
+    "en": "This dataset is a PILOT benchmark: 100 questions (10 per category). This size is not sufficient for a statistically reliable ranking of models. Small score differences may be due to chance; results should be read as indicative, not as a definitive ranking."
+  },
+  "leakage_notice": {
+    "tr": "Bu sürümün soruları ve cevap anahtarları tamamen herkese açıktır. Bu nedenle bir modelin eğitim verisinde bu soruları görmüş olması (test veri sızıntısı) mümkündür ve yüksek puanlar genelleme yeteneğinin kanıtı sayılmamalıdır. Gizli bir test seti ileriki bir sürümde ayrıca oluşturulacaktır.",
+    "en": "Questions and answer keys of this release are fully public. A model may therefore have seen them in its training data (test data leakage), and high scores must not be taken as proof of generalization. A private test set will be created separately in a later release."
+  },
+  "question_type_rules": {
+    "multiple_choice": {
+      "scoring_method": "multiple_choice_match",
+      "normalization": ["choice_label"],
+      "required_fields": ["choices", "answer"],
+      "forbidden_fields": ["accepted_answers", "code_spec", "constraints"],
+      "scoring_required": [],
+      "scoring_forbidden": ["tolerance", "rubric_id"]
+    },
+    "short_answer": {
+      "scoring_method": "exact_match",
+      "normalization": ["tr_text", "tr_text_case_sensitive"],
+      "required_fields": ["answer"],
+      "forbidden_fields": ["choices", "code_spec", "constraints"],
+      "scoring_required": [],
+      "scoring_forbidden": ["tolerance", "rubric_id"]
+    },
+    "numeric": {
+      "scoring_method": "numeric_match",
+      "normalization": ["numeric"],
+      "required_fields": ["answer"],
+      "forbidden_fields": ["choices", "accepted_answers", "code_spec", "constraints"],
+      "scoring_required": ["tolerance"],
+      "scoring_forbidden": ["rubric_id"]
+    },
+    "code": {
+      "scoring_method": "unit_tests",
+      "normalization": ["none"],
+      "required_fields": ["code_spec"],
+      "forbidden_fields": ["choices", "answer", "accepted_answers", "constraints"],
+      "scoring_required": [],
+      "scoring_forbidden": ["tolerance", "rubric_id"]
+    },
+    "constraint_check": {
+      "scoring_method": "constraint_check",
+      "normalization": ["none"],
+      "required_fields": ["constraints"],
+      "forbidden_fields": ["choices", "answer", "accepted_answers", "code_spec"],
+      "scoring_required": [],
+      "scoring_forbidden": ["tolerance", "rubric_id"]
+    },
+    "open_ended": {
+      "scoring_method": "rubric",
+      "normalization": ["none"],
+      "required_fields": [],
+      "forbidden_fields": ["choices", "answer", "accepted_answers", "code_spec", "constraints"],
+      "scoring_required": ["rubric_id"],
+      "scoring_forbidden": ["tolerance"]
+    }
+  },
+  "categories": [
+    {
+      "id": "turkish_language_understanding", "prefix": "TLU",
+      "name_en": "Turkish Language Understanding", "name_tr": "Türkçe Dil Anlama",
+      "description_tr": "Deyim, atasözü, eş/zıt anlam, sözcük ve cümle anlamı, örtük anlam çıkarımı.",
+      "question_types": ["multiple_choice", "short_answer"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "logical_reasoning", "prefix": "LOG",
+      "name_en": "Logical Reasoning", "name_tr": "Mantıksal Akıl Yürütme",
+      "description_tr": "Önermeler, sıralama, çıkarım, örüntü ve basit kısıt problemleri.",
+      "question_types": ["multiple_choice", "short_answer"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "mathematics", "prefix": "MAT",
+      "name_en": "Mathematics", "name_tr": "Matematik",
+      "description_tr": "Türkçe anlatılmış sözel problemler ve temel aritmetik, oran, yüzde, geometri; tek ve doğrulanabilir sayısal cevap.",
+      "question_types": ["numeric", "multiple_choice"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "general_knowledge", "prefix": "GKN",
+      "name_en": "General Knowledge", "name_tr": "Genel Kültür",
+      "description_tr": "Fen, coğrafya, tarih ve kültür alanlarında zamanla değişmeyen, doğrulanabilir bilgiler.",
+      "question_types": ["multiple_choice", "short_answer"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": true,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "coding", "prefix": "COD",
+      "name_en": "Coding", "name_tr": "Kodlama",
+      "description_tr": "Türkçe tanımlanmış küçük Python fonksiyonları; birim testleriyle, yalnızca yalıtılmış ve sınırlandırılmış bir süreçte puanlanır.",
+      "question_types": ["code"],
+      "scoring_mode": "automatic", "score_basis": "code_problem_pass_rate", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "instruction_following", "prefix": "IFL",
+      "name_en": "Instruction Following", "name_tr": "Talimat Takibi",
+      "description_tr": "Program ile doğrulanabilir biçim ve içerik kısıtları (satır sayısı, ön ek, yasak karakter/sözcük vb.).",
+      "question_types": ["constraint_check"],
+      "scoring_mode": "automatic", "score_basis": "instruction_following_strict", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "turkish_grammar", "prefix": "GRM",
+      "name_en": "Turkish Grammar", "name_tr": "Türkçe Dilbilgisi",
+      "description_tr": "Yazım kuralları, noktalama, ek ve çekim, cümle ögeleri; Türkçeye özgü karakterler dahil. Cevap anahtarı kaynak sürümü veya erişim tarihiyle kaydedilir.",
+      "question_types": ["multiple_choice", "short_answer"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": true,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "reading_comprehension", "prefix": "RCP",
+      "name_en": "Reading Comprehension", "name_tr": "Okuduğunu Anlama",
+      "description_tr": "Kısa, özgün veya lisansı net metinler üzerine, cevabı metinden çıkarılabilen sorular.",
+      "question_types": ["multiple_choice", "short_answer"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "creative_writing", "prefix": "CRW",
+      "name_en": "Creative Writing", "name_tr": "Yaratıcı Yazarlık",
+      "description_tr": "Açık uçlu yazma görevleri. Kelime eşleşmesiyle puanlanmaz; rubrik ile LLM hakem (isteğe bağlı) veya insan değerlendirmesi (isteğe bağlı) gerekir. Pilot sürümde tek rubrik kullanılır; ileride başka açık uçlu görev türleri için ayrı rubrikler tanımlanabilir.",
+      "question_types": ["open_ended"],
+      "scoring_mode": "rubric", "score_basis": "rubric_mean", "rubric_id": "creative_writing_v1", "references_required": false,
+      "weight": 0.1, "pilot_target_count": 10
+    },
+    {
+      "id": "factual_accuracy", "prefix": "FAC",
+      "name_en": "Factual Accuracy", "name_tr": "Olgusal Doğruluk",
+      "description_tr": "Güvenilir kaynaklarla doğrulanabilir, tartışmasız olgular. Gerçek veri setine girmek için güvenilir kaynak kaydı (references) zorunludur.",
+      "question_types": ["short_answer", "multiple_choice"],
+      "scoring_mode": "automatic", "score_basis": "accuracy", "references_required": true,
+      "weight": 0.1, "pilot_target_count": 10
+    }
+  ],
+  "metrics": {
+    "category_scores": {
+      "name_tr": "Kategori Puanları",
+      "statistic_type": "per_category",
+      "definition_tr": "Her kategori için tek bir puan (0–100). Puanın dayanağı kategoride tanımlı score_basis alanıdır: accuracy (doğru sayısı / madde sayısı), code_problem_pass_rate (kodlama: bir sorudaki tüm testlerin geçildiği soruların oranı), instruction_following_strict (talimat takibi: tüm kısıtların sağlandığı maddelerin oranı), rubric_mean (yaratıcı yazarlık: normalize rubrik puanı ortalaması). İkili sonuç tabanlı kategorilerde soru sayısı (n) ve %95 Wilson aralığı gösterilir; rubric_mean için aralık hesaplanmaz.",
+      "confidence_interval": { "method": "wilson_95", "applies_to_score_basis": ["accuracy", "code_problem_pass_rate", "instruction_following_strict"], "unavailable_for_score_basis": ["rubric_mean"] },
+      "score_source": "automatic | judge | human (kaynak her zaman belirtilir)"
+    },
+    "overall_score_automatic": {
+      "name_tr": "Genel Puan (otomatik)",
+      "statistic_type": "weighted_mean",
+      "definition_tr": "Yalnızca otomatik puanlanan kategorilerin puanlarının, categories[].weight ağırlıklarıyla (seçilen otomatik kategoriler için toplam 1'e yeniden normalize edilerek) ağırlıklı ortalaması (0–100). LLM hakem veya insan puanları bu değere KATILMAZ. Yalnızca aynı kategori kümesini kapsayan koşular karşılaştırılabilir.",
+      "confidence_interval": { "method": null, "reason_tr": "Farklı türdeki kategori puanlarının ağırlıklı ortalaması ikili bir oran değildir; Wilson aralığı istatistiksel olarak uygun değildir. Bu yüzden aralık hesaplanmaz." },
+      "score_source": "automatic"
+    },
+    "overall_score_extended": {
+      "name_tr": "Genel Puan (genişletilmiş)",
+      "statistic_type": "weighted_mean",
+      "definition_tr": "Otomatik kategori puanlarına rubrik puanlı kategori(ler)in eklendiği ağırlıklı ortalama. Rubrik puanı kaynağına göre AYRI hesaplanır (judge ve human ayrı değerlerdir, birleştirilmez) ve yalnızca ilgili kategorideki tüm maddelerin puanı varsa hesaplanır. Hiçbir durumda overall_score_automatic değerini değiştirmez.",
+      "confidence_interval": { "method": null, "reason_tr": "Ağırlıklı ortalama ve rubrik puanı içerdiği için Wilson aralığı uygun değildir." },
+      "score_source": "automatic + judge | automatic + human"
+    },
+    "accuracy": {
+      "name_tr": "Doğruluk (Accuracy)",
+      "statistic_type": "binary_proportion",
+      "definition_tr": "multiple_choice_match, exact_match, numeric_match ve unit_tests (soru düzeyinde: tüm testler geçti) ile puanlanan maddelerde doğru sayısının puanlanan madde sayısına oranı. constraint_check ve rubric maddeleri dahil değildir.",
+      "confidence_interval": { "method": "wilson_95", "reason_tr": "Her madde bağımsız bir doğru/yanlış sonucudur; Wilson aralığı uygundur." },
+      "score_source": "automatic"
+    },
+    "exact_match": {
+      "name_tr": "Tam Eşleşme (Exact Match)",
+      "statistic_type": "binary_proportion",
+      "definition_tr": "Yalnızca exact_match ile puanlanan kısa cevap maddelerinde, normalizasyon sonrası cevabın cevap anahtarı veya kabul edilen alternatiflerden biriyle tam eşleşme oranı. answer ve her accepted_answers girdisi AYRI normalize edilir. Bilinçli olarak katıdır: Türkçede ek alan biçimler ('Selanik'te') eşleşmez, bu yüzden kısa cevap soruları cevap biçimini açıkça belirtmelidir.",
+      "confidence_interval": { "method": "wilson_95", "reason_tr": "İkili madde sonuçlarının oranı." },
+      "score_source": "automatic"
+    },
+    "code_test_pass_rate": {
+      "name_tr": "Kod Test Geçme Oranı",
+      "statistic_type": "pooled_fraction",
+      "definition_tr": "Kodlama kategorisinde geçilen test sayısının toplam test sayısına oranı (kısmi başarıyı gösterir). Bir sorudaki testler birbirine bağımlı olduğundan bağımsız deneme sayılamaz.",
+      "confidence_interval": { "method": null, "reason_tr": "Testler aynı çözüme ait olduğu için bağımsız değildir; Wilson aralığı yanıltıcı olur. Aralık hesaplanmaz." },
+      "score_source": "automatic"
+    },
+    "code_problem_pass_rate": {
+      "name_tr": "Kod Soru Geçme Oranı",
+      "statistic_type": "binary_proportion",
+      "definition_tr": "Kodlama kategorisinde bir sorudaki BÜTÜN testlerin başarılı olduğu soruların, puanlanan kod sorularına oranı. Kodlama kategori puanının dayanağıdır.",
+      "confidence_interval": { "method": "wilson_95", "reason_tr": "Her soru bağımsız ikili sonuçtur." },
+      "score_source": "automatic"
+    },
+    "response_quality": {
+      "name_tr": "Cevap Kalitesi",
+      "statistic_type": "ordinal_mean",
+      "definition_tr": "Rubrik ile puanlanan açık uçlu maddelerde, (kriter ortalaması − ölçek alt sınırı) / (ölçek üst sınırı − alt sınırı) ile 0–1 aralığına normalize edilmiş puanın ortalaması (0–100 gösterilir). Pilot sürümde yalnızca Creative Writing kategorisinden gelir. Hakem ve insan puanları ayrı sütunlarda raporlanır, birleştirilmez. İkisi de isteğe bağlıdır; hiçbiri yoksa metrik hesaplanmaz.",
+      "confidence_interval": { "method": null, "reason_tr": "Sıralı ölçek ortalamasıdır, ikili oran değildir; Wilson aralığı uygun değildir. Aralık hesaplanmaz ve bu açıkça belirtilir." },
+      "score_source": "judge | human"
+    },
+    "instruction_following_score": {
+      "name_tr": "Talimat Takibi Puanı (katı)",
+      "statistic_type": "binary_proportion",
+      "definition_tr": "Bir maddedeki TÜM kısıtlar sağlandıysa 1, aksi halde 0; maddelerin ortalaması. Talimat takibi kategori puanının dayanağıdır.",
+      "confidence_interval": { "method": "wilson_95", "reason_tr": "Her madde ikili sonuçtur." },
+      "score_source": "automatic"
+    },
+    "instruction_following_score_loose": {
+      "name_tr": "Talimat Takibi Puanı (gevşek)",
+      "statistic_type": "mean_of_fractions",
+      "definition_tr": "Her maddede sağlanan kısıt oranının ortalaması.",
+      "confidence_interval": { "method": null, "reason_tr": "Kesirlerin ortalamasıdır, ikili oran değildir; aralık hesaplanmaz." },
+      "score_source": "automatic"
+    },
+    "average_response_length": {
+      "name_tr": "Ortalama Cevap Uzunluğu",
+      "statistic_type": "descriptive",
+      "definition_tr": "Başarılı (status=ok) model cevaplarının ortalama karakter sayısı ve boşlukla ayrılmış sözcük sayısı. Bilgi amaçlıdır; kalite puanı değildir ve hiçbir puana katılmaz.",
+      "confidence_interval": { "method": null, "reason_tr": "Betimleyici istatistik; aralık hesaplanmaz." },
+      "score_source": "none"
+    }
+  },
+  "confidence_interval_policy": {
+    "method": "wilson_95",
+    "z": 1.959963984540054,
+    "allowed_statistic_types": ["binary_proportion"],
+    "forbidden_statistic_types": ["weighted_mean", "ordinal_mean", "mean_of_fractions", "pooled_fraction", "descriptive", "per_category"],
+    "when_unavailable_tr": "Aralık hesaplanamıyorsa veya uygun değilse değer null bırakılır ve nedeni (ci_unavailable_reason) raporda açıkça yazılır; yaklaşık veya yanıltıcı bir aralık üretilmez."
+  },
+  "rubrics": {
+    "creative_writing_v1": {
+      "version": "1.0.0",
+      "name_tr": "Yaratıcı Yazarlık Rubriği",
+      "applies_to_categories": ["creative_writing"],
+      "scale": {
+        "min": 0,
+        "max": 4,
+        "anchors": {
+          "0": "Kriteri hiç karşılamıyor",
+          "1": "Çok zayıf",
+          "2": "Kısmen karşılıyor",
+          "3": "İyi, küçük eksiklerle",
+          "4": "Tam ve örnek niteliğinde"
+        }
+      },
+      "criteria": [
+        { "id": "instruction_compliance", "name_tr": "Yönergelere uyum", "description_tr": "Uzunluk, biçim ve istenen öğeler gibi görev yönergelerine uyum." },
+        { "id": "coherence", "name_tr": "Tutarlılık", "description_tr": "Anlatı bütünlüğü ve mantıksal akış." },
+        { "id": "language_quality", "name_tr": "Dil kalitesi", "description_tr": "Türkçe yazım, dilbilgisi ve doğal ifade." },
+        { "id": "creativity", "name_tr": "Özgünlük", "description_tr": "Hayal gücü ve klişelerden uzaklık." },
+        { "id": "style", "name_tr": "Üslup", "description_tr": "Ton, anlatım gücü ve türe uygunluk." }
+      ],
+      "aggregation_tr": "Madde puanı = (kriter puanlarının ortalaması − min) / (max − min). Sonuç 0–1 aralığındadır. Kriter puanları tam sayı olmalı, ölçek içinde kalmalı ve rubriğin kriter kümesiyle birebir aynı olmalıdır."
+    }
+  },
+  "normalization_profiles": {
+    "tr_text": {
+      "kind": "text",
+      "description_tr": "Türkçe metin karşılaştırması için varsayılan profil. Hem model cevabına hem cevap anahtarına (answer ve her accepted_answers girdisine ayrı ayrı) uygulanır. Yalnızca KARŞILAŞTIRMA içindir: ham cevap ve ham cevap anahtarı değiştirilmez, ham cevap sonuçlarda saklanır.",
+      "steps": [
+        "1. Unicode NFC uygula (NFKC/NFKD KULLANILMAZ).",
+        "2. Sıfır genişlikli karakterleri sil: U+200B, U+200C, U+200D, U+2060, U+FEFF.",
+        "3. Boşluk: Unicode boşluk sayılan her karakteri (U+00A0, U+202F, sekme, satır sonu dahil) tek ASCII boşluğa çevir, ardışık boşlukları teke indir, baştaki/sondaki boşluğu sil.",
+        "4. Apostrof: U+2019 (’), U+2018 (‘) ve U+02BC (ʼ) karakterlerini U+0027 (') karakterine çevir.",
+        "5. Türkçe küçük harf: önce 'İ'→'i' ve 'I'→'ı', sonra Python str.lower(). casefold() kullanılmaz.",
+        "6. 'i' + U+0307 (birleşik nokta) dizisini 'i'ye indirge.",
+        "7. Baştaki ve sondaki şu karakterleri sil (ortadakilere dokunma): \" ' “ ” „ « » . , ; : ! ? …"
+      ],
+      "never_do": [
+        "ASCII'ye indirgeme: ı→i, ş→s, ğ→g, ü→u, ö→o, ç→c",
+        "Şapkalı harflerin şapkasını silme: â→a, î→i, û→u (kâr ≠ kar)",
+        "Yerel ayardan bağımsız lower()/upper()/casefold() ile I→i dönüşümü",
+        "NFKC/NFKD ile uyumluluk katlaması (örn. 'CO₂' → 'CO2' yapılmaz)"
+      ],
+      "examples": [
+        { "input": "ISPARTA", "output": "ısparta" },
+        { "input": "İSTANBUL", "output": "istanbul" },
+        { "input": "Iğdır", "output": "ığdır" },
+        { "input": "İzmir’de", "output": "izmir'de" },
+        { "input": "  Selanik.  ", "output": "selanik" },
+        { "input": "kâr", "output": "kâr" },
+        { "input": "şu", "output": "şu" },
+        { "input": "Ça​ğ", "output": "çağ" }
+      ]
+    },
+    "tr_text_case_sensitive": {
+      "kind": "text",
+      "description_tr": "tr_text ile aynıdır ancak 5. ve 6. adımlar (küçük harfe çevirme) uygulanmaz; büyük/küçük harfin anlam taşıdığı maddelerde kullanılır.",
+      "steps": ["tr_text adımları 1, 2, 3, 4 ve 7"],
+      "never_do": ["Büyük/küçük harf katlaması", "ASCII'ye indirgeme", "NFKC/NFKD"],
+      "examples": [
+        { "input": "İzmir’de", "output": "İzmir'de" },
+        { "input": "ISPARTA ", "output": "ISPARTA" }
+      ]
+    },
+    "none": {
+      "kind": "identity",
+      "description_tr": "Metni DEĞİŞTİRMEDEN korur (birebir aynı dizge; NFC, boşluk kırpma dahil hiçbir işlem yok). Kod, kısıt kontrolü ve rubrik maddelerinde kullanılır. Kısıt kontrolleri ham metin üzerinde çalışır; all_lowercase/all_uppercase kendi Türkçe harf kuralını uygular ve metni değiştirmez.",
+      "steps": [],
+      "never_do": ["Metinde herhangi bir değişiklik"],
+      "examples": [
+        { "input": "  İzmir’de ​ ", "output": "  İzmir’de ​ " }
+      ]
+    },
+    "choice_label": {
+      "kind": "parser",
+      "description_tr": "Çoktan seçmeli cevap ayrıştırma. YALNIZCA açıkça tanımlanmış biçimler kabul edilir; tahmin yürütülmez. Önce Unicode NFC, sıfır genişlikli karakter silme ve boşluk sadeleştirme (tr_text adımları 1–3) uygulanır; sonra yalnızca şu biçimler tam eşleşme olarak kabul edilir (harf büyük/küçük olabilir): 'B', 'B.', 'B)', '(B)', '(B).', ve 'Cevap: B' (önek: cevap, yanıt, doğru cevap, doğru yanıt, doğru seçenek; iki nokta zorunlu; sonrasında yukarıdaki harf biçimlerinden biri).",
+      "statuses": {
+        "parsed": "Kabul edilen biçim ve harf, sorunun seçenek etiketlerinden biri. Puanlanır.",
+        "ambiguous": "Kabul edilen biçim yok ve metinde birden fazla farklı büyük harfli A–E etiketi var ('A veya B', 'B, C'). Tahmin yürütülmez; belirsiz işaretlenir, puan 0, flags=['ambiguous_answer'].",
+        "invalid_format": "Kabul edilen biçim yok ve belirsizlik de yok ('Bence cevap B olabilir', boş cevap, seçenek metninin tekrarı). Puan 0, flags=['invalid_format'].",
+        "invalid_label": "Biçim geçerli ama etiket sorunun seçenekleri arasında değil (4 seçenekli soruda 'E'). Puan 0, flags=['invalid_label']."
+      },
+      "never_do": ["Cümle içinden tek bir harfi ayıklayıp cevap sayma", "Seçenek metnini benzerlikle eşleştirme", "Birden fazla etiket varsa ilkini seçme"],
+      "examples": [
+        { "input": "B", "valid_labels": "ABCD", "status": "parsed", "label": "B" },
+        { "input": "b.", "valid_labels": "ABCD", "status": "parsed", "label": "B" },
+        { "input": "(C)", "valid_labels": "ABCD", "status": "parsed", "label": "C" },
+        { "input": "Cevap: B", "valid_labels": "ABCD", "status": "parsed", "label": "B" },
+        { "input": "Doğru cevap: d", "valid_labels": "ABCD", "status": "parsed", "label": "D" },
+        { "input": "A veya B", "valid_labels": "ABCD", "status": "ambiguous", "label": null },
+        { "input": "B, C", "valid_labels": "ABCD", "status": "ambiguous", "label": null },
+        { "input": "Bence cevap B olabilir", "valid_labels": "ABCD", "status": "invalid_format", "label": null },
+        { "input": "E", "valid_labels": "ABCD", "status": "invalid_label", "label": null },
+        { "input": "", "valid_labels": "ABCD", "status": "invalid_format", "label": null }
+      ]
+    },
+    "numeric": {
+      "kind": "parser",
+      "description_tr": "Sayısal cevap ayrıştırma. Cevap anahtarı noktalı ondalık ve binlik ayırıcısız yazılır (1234.5). Model cevabı: (isteğe bağlı 'Cevap:' öneki) + TEK sayı + (isteğe bağlı) tek bir birim sözcüğü (yalnızca harf) + (isteğe bağlı) sondaki nokta olmalıdır. Aksi halde invalid_format. Metinde birden fazla sayı varsa multiple_numbers. Ayırıcı kuralları: (a) '.' ve ',' birlikte varsa sonuncusu ondalık, diğeri binlik ayırıcıdır ve binlik gruplar tam 3 hane olmalıdır; (b) tek tür ayırıcı birden fazla kez geçiyorsa binlik ayırıcıdır (gruplar 3 hane); (c) tek ayırıcı bir kez geçiyorsa: sağında TAM 3 hane ve solunda 1–3 hane (başı 0 değil) varsa ('1.234', '1,234', '12.345') cevap belirsizdir; aksi halde ondalıktır ('1.5', '3,25', '0.123'). Belirsiz sayılar otomatik yorumlanmaz: ambiguous işaretlenir, puan 0, flags=['ambiguous_number'], iki yorum details alanına yazılır.",
+      "statuses": {
+        "parsed": "Tek ve açık yorum. Cevap anahtarıyla scoring.tolerance (mutlak, Decimal) içinde karşılaştırılır.",
+        "ambiguous": "Birden fazla makul yorum ('1.234' = 1,234 veya 1234). Puan 0, belirsiz işaretli.",
+        "multiple_numbers": "Metinde birden fazla sayı. Puan 0. Boşlukla ayrılmış binlik ('1 234') de iki ayrı sayı sayılır ve birleştirilmez.",
+        "invalid_format": "Tanımlı biçime uymuyor (yüzde işareti, cümle içinde sayı, hiç sayı yok, bozuk ayırıcı). Puan 0."
+      },
+      "never_do": ["'1.234' gibi sayıları tahminle yorumlama", "Birden fazla sayıdan ilkini seçme", "Boşlukla ayrılmış binlikleri birleştirme"],
+      "examples": [
+        { "input": "740", "status": "parsed", "value": "740" },
+        { "input": "740 TL", "status": "parsed", "value": "740" },
+        { "input": "Cevap: 740.", "status": "parsed", "value": "740" },
+        { "input": "-3,5", "status": "parsed", "value": "-3.5" },
+        { "input": "0.123", "status": "parsed", "value": "0.123" },
+        { "input": "1.234,5", "status": "parsed", "value": "1234.5" },
+        { "input": "1,234.5", "status": "parsed", "value": "1234.5" },
+        { "input": "1.234.567", "status": "parsed", "value": "1234567" },
+        { "input": "1.234", "status": "ambiguous", "value": null },
+        { "input": "1,234", "status": "ambiguous", "value": null },
+        { "input": "12 ve 15", "status": "multiple_numbers", "value": null },
+        { "input": "1 234", "status": "multiple_numbers", "value": null },
+        { "input": "yaklaşık yedi yüz", "status": "invalid_format", "value": null },
+        { "input": "%25", "status": "invalid_format", "value": null }
+      ]
+    }
+  },
+  "constraint_semantics": {
+    "lines_tr": "Satırlar: \\r\\n ve \\r → \\n çevrilir, baştaki ve sondaki boşluk-yalnızı satırlar atılır, geri kalan \\n ile bölünür; aradaki boş satırlar satır sayılır. Satır içi boşluklar kırpılmaz.",
+    "types": {
+      "line_count": "Satır sayısı değerle (tam sayı) birebir eşit.",
+      "line_prefix": "HER satır değerle başlar (yalnızca ilk satır değil). Satır yoksa başarısız.",
+      "word_count_min": "Boşlukla ayrılmış sözcük sayısı ≥ değer.",
+      "word_count_max": "Boşlukla ayrılmış sözcük sayısı ≤ değer.",
+      "required_substring": "Ham metinde değer ALT DİZE olarak geçer; büyük/küçük harf duyarlı, sözcük sınırı aranmaz.",
+      "forbidden_substring": "Ham metinde değer ALT DİZE olarak geçmez; büyük/küçük harf duyarlı. 'veri' yasaksa 'verileri' de ihlaldir.",
+      "required_word": "Değer TÜM SÖZCÜK olarak geçer: Türkçe küçük harf (tr_lower) ile büyük/küçük harf duyarsız, sözcük sınırı harf/rakam dışı karakterlerdir (apostrof sınırdır: \"İstanbul'da\" içinde 'İstanbul' sözcüğü bulunur). Ek almış biçim ('verileri') 'veri' sözcüğü SAYILMAZ.",
+      "forbidden_word": "required_word eşleşmesinin tersi: sözcük olarak geçmez; 'verileri' içinde 'veri' bulunsa da ihlal sayılmaz.",
+      "forbidden_char": "Değer (tek karakter) ham metinde hiç geçmez.",
+      "starts_with": "Baştaki boşluklar atıldıktan sonra metin değerle başlar (büyük/küçük harf duyarlı).",
+      "ends_with": "Sondaki boşluklar atıldıktan sonra metin değerle biter (büyük/küçük harf duyarlı).",
+      "all_lowercase": "Metin == tr_lower(metin): büyük harf yok (İ ve I dahil Türkçe kurallarına göre).",
+      "all_uppercase": "Metin == tr_upper(metin): küçük harf yok (i→İ, ı→I Türkçe kurallarına göre)."
+    }
+  },
+  "code_execution_policy": {
+    "main_process_execution": "forbidden",
+    "requirements_tr": [
+      "Model tarafından üretilen kod ASLA uygulamanın ana sürecinde (exec/eval/import) çalıştırılmaz.",
+      "Her test ayrı bir alt süreçte çalışır: yeni oturum, boş ortam değişkenleri (API anahtarları ve gizli bilgiler aktarılmaz), geçici ve boş çalışma dizini, Python yalıtılmış kipte (-I -S).",
+      "Kaynak sınırları: duvar saati zaman aşımı (timeout_seconds), CPU süresi, bellek (memory_limit_mb), yazılabilir dosya boyutu ve açık dosya sayısı; zaman aşımında süreç grubu öldürülür.",
+      "Kod çalışmadan önce statik denetimden geçer: izinli standart kütüphane modülleri dışında import yok; open/exec/eval/compile/__import__/input çağrıları ve tehlikeli dunder erişimleri yok. Reddedilen kod tüm testlerde başarısız sayılır.",
+      "Standart çıktı sınırlıdır ve sonuç, süreç başına rastgele üretilen bir belirteçle işaretlenerek okunur."
+    ],
+    "best_effort_notice_tr": "Bu önlemler en iyi çaba esaslı kısıtlamadır ve gerçek bir güvenlik duvarı (sandbox) DEĞİLDİR: ağ erişimi ve dosya sistemi okuması işletim sistemi düzeyinde engellenmez. Güvenilmeyen modellerin kodu herkese açık bir Space üzerinde çalıştırılacaksa konteyner/gVisor/nsjail benzeri güçlü yalıtım gerekir.",
+    "fallback_tr": "Güvenli yürütme ortamı yoksa kodlama maddeleri ÇALIŞTIRILMAZ: ilgili sonuçlar automatic.status=scoring_error ile kaydedilir ve kodlama kategorisi 'değerlendirilmedi' olarak raporlanır; ana süreçte çalıştırmaya geri dönülmez."
+  },
+  "reporting_rules": {
+    "required_run_metadata": [
+      "run_id", "created_at (UTC, Z ile biten)", "tda_eval_version",
+      "dataset.id", "dataset.version", "dataset.revision", "dataset.split",
+      "model.provider", "model.model_id", "model.model_version", "model.model_revision",
+      "generation.requested.temperature", "generation.requested.top_p", "generation.requested.max_tokens", "generation.requested.seed",
+      "generation.reported.* (sağlayıcının bildirdiği değerler)",
+      "generation.n_samples (=1)", "generation.prompt_template_id", "generation.system_prompt_sha256"
+    ],
+    "requested_vs_reported_tr": "generation.requested, TDA Eval'in isteğe KOYDUĞU parametrelerdir (null = gönderilmedi). generation.reported, sağlayıcının gerçekten kullandığını bildirdiği değerlerdir. Sağlayıcı bildirmediyse reported.status='unreported' ve tüm alanlar null olur; requested değerleri reported içine ASLA kopyalanmaz.",
+    "unknown_values_tr": "Bilinmeyen değerler tahmin edilmez: dizge alanlarında 'unreported' (model.model_version), sayısal/isteğe bağlı alanlarda null kullanılır.",
+    "n_samples_tr": "v0.1.0'da soru başına tam olarak bir örnek alınır (n_samples=1, sample_index=0). İleride birden fazla örnek desteklenirse (question_id, sample_index) çifti benzersiz anahtar olur ve şema sürümü yükseltilir.",
+    "human_rating_limit_tr": "v0.1.0'da bir sonuç için TEK insan değerlendirmesi vardır (human alanı tek nesnedir, raters_per_item=1). Birden fazla değerlendirici desteği şema 2.0 ile (human alanı dizi olacak) eklenecektir; bu sürümde değerlendiriciler arası uyum ölçülemez.",
+    "judge_disclosure_tr": "LLM hakem kullanıldıysa rapor hakem modelin adını, sürümünü, sağlayıcısını, sıcaklığını, rubrik kimlik ve sürümlerini ve hakem prompt özetini (sha256) göstermelidir. Hakem isteğe bağlıdır; kullanılmadıysa judge=null ve bütün sonuçlarda judge=null olur. Hakem puanları yaklaşık göstergedir; hakem modelin kendi önyargıları (uzun cevapları tercih etme, kendi model ailesini kayırma vb.) olabilir.",
+    "human_disclosure_tr": "İnsan değerlendirmesi isteğe bağlıdır; yapılmadıysa human_evaluation=null ve bütün sonuçlarda human=null olur. Yapıldıysa rubrik sürümü ve yönerge sürümü kaydedilir.",
+    "separate_score_sources_tr": "Otomatik, LLM hakem ve insan puanları ayrı alanlarda tutulur ve gösterilir; hiçbir zaman otomatik genel puana karıştırılmaz.",
+    "error_handling_tr": "Model API hataları rapordan atılmaz: sonuç status=error ile kalır, error nesnesi dolu, response/puan alanları null olur. Rapor, hatasız tamamlanan madde oranını (kapsam) ve hata sayısını görünür biçimde gösterir; hata içeren koşular tam koşularla doğrudan kıyaslanmaz.",
+    "uncertainty_tr": "İkili metriklerde soru sayısı (n) ve %95 Wilson aralığı gösterilir; aralığın uygun olmadığı metriklerde nedeni açıkça yazılır (confidence_interval_policy). Pilot ve sızıntı uyarıları (pilot_notice, leakage_notice) her rapor ve puan tablosunda görünür olmalıdır."
+  }
+}

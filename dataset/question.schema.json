@@ -1,0 +1,1409 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://huggingface.co/datasets/TDA/TDA-Eval/question.schema.json",
+  "title": "TDA Eval Question (schema 1.0.0)",
+  "description": "Each line of questions.jsonl is one JSON object that conforms to this schema. FIELD ROLES: 'license' is the license under which THIS question item is redistributed in the dataset (original TDA-written items: Apache-2.0). 'source.license' is the license of the UPSTREAM material a third-party item was taken from; it is required for third_party/public_domain items and forbidden for original items. Neither is the license of the TDA Eval code. Rules that JSON Schema cannot express (id uniqueness across lines, JSON-string contents of code tests, normalization-aware duplicate answers, license allow-list, categories.json agreement) are enforced by tda_eval/validators.py. 'format' keywords are only enforced when the validator is built with tda_eval.validators.FORMAT_CHECKER (jsonschema ignores most formats by default).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "category",
+    "prompt",
+    "question_type",
+    "scoring",
+    "source",
+    "license",
+    "difficulty",
+    "verification",
+    "status",
+    "added_in",
+    "split"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(TLU|LOG|MAT|GKN|COD|IFL|GRM|RCP|CRW|FAC)-(00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})$",
+      "description": "Permanent id. 001-899: real dataset questions. 900-999: reserved for test fixtures (split must be 'fixture'); fixtures are never imported into questions.jsonl. An id is never reused; removed questions get status=deprecated."
+    },
+    "category": {
+      "enum": [
+        "turkish_language_understanding",
+        "logical_reasoning",
+        "mathematics",
+        "general_knowledge",
+        "coding",
+        "instruction_following",
+        "turkish_grammar",
+        "reading_comprehension",
+        "creative_writing",
+        "factual_accuracy"
+      ]
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Turkish task text shown to the model. Choices/context live in their own fields."
+    },
+    "context": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional passage the prompt refers to."
+    },
+    "question_type": {
+      "enum": [
+        "multiple_choice",
+        "short_answer",
+        "numeric",
+        "code",
+        "constraint_check",
+        "open_ended"
+      ]
+    },
+    "choices": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 5,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "text"
+          ],
+          "properties": {
+            "label": {
+              "const": "A"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "text"
+          ],
+          "properties": {
+            "label": {
+              "const": "B"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "text"
+          ],
+          "properties": {
+            "label": {
+              "const": "C"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "text"
+          ],
+          "properties": {
+            "label": {
+              "const": "D"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "text"
+          ],
+          "properties": {
+            "label": {
+              "const": "E"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ],
+      "items": false,
+      "description": "Labels must be exactly A, B, C, ... in order (this makes labels unique and contiguous)."
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "multiple_choice: a label that exists in choices. numeric: dot-decimal, no thousands separator (1234.5). short_answer: canonical answer text."
+    },
+    "accepted_answers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "short_answer only. Explicit alternatives chosen by the author. Each entry is normalized separately; no equivalence (e.g. formula vs. name) is ever assumed."
+    },
+    "code_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "entry_point",
+        "sandbox_required",
+        "timeout_seconds",
+        "memory_limit_mb",
+        "tests"
+      ],
+      "properties": {
+        "language": {
+          "const": "python"
+        },
+        "entry_point": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "sandbox_required": {
+          "const": true,
+          "description": "Model code must run only in an isolated, resource-limited process (see categories.json code_execution_policy), never inside the main application process."
+        },
+        "timeout_seconds": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "memory_limit_mb": {
+          "type": "integer",
+          "minimum": 32,
+          "maximum": 512
+        },
+        "tests": {
+          "type": "array",
+          "minItems": 3,
+          "description": "At least 3 tests, chosen to fit the task. Edge cases such as an empty list or a negative value are NOT mandatory; include them only when meaningful.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "args_json",
+              "expected_json"
+            ],
+            "properties": {
+              "args_json": {
+                "type": "string",
+                "minLength": 2,
+                "description": "JSON array of positional arguments, e.g. \"[[1,2,3]]\"."
+              },
+              "expected_json": {
+                "type": "string",
+                "minLength": 1,
+                "description": "JSON encoding of the expected return value."
+              }
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "value"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "line_count",
+              "line_prefix",
+              "word_count_min",
+              "word_count_max",
+              "required_substring",
+              "forbidden_substring",
+              "required_word",
+              "forbidden_word",
+              "forbidden_char",
+              "starts_with",
+              "ends_with",
+              "all_lowercase",
+              "all_uppercase"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "line_count",
+                    "word_count_min",
+                    "word_count_max"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "pattern": "^[1-9][0-9]*$"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "forbidden_char"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "maxLength": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "all_lowercase",
+                    "all_uppercase"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "const": "true"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "normalization"
+      ],
+      "description": "'normalization' is always required (explicit). 'tolerance' is required if and only if method=numeric_match. 'rubric_id' is required if and only if method=rubric.",
+      "properties": {
+        "method": {
+          "enum": [
+            "multiple_choice_match",
+            "exact_match",
+            "numeric_match",
+            "unit_tests",
+            "constraint_check",
+            "rubric"
+          ]
+        },
+        "normalization": {
+          "enum": [
+            "tr_text",
+            "tr_text_case_sensitive",
+            "numeric",
+            "choice_label",
+            "none"
+          ]
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Absolute tolerance (numeric_match)."
+        },
+        "rubric_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Key into categories.json rubrics (rubric)."
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "authoring"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "original",
+            "third_party",
+            "public_domain"
+          ]
+        },
+        "authoring": {
+          "enum": [
+            "human",
+            "ai_assisted"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "license": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9.+-]+$",
+          "description": "License of the upstream source material (SPDX id)."
+        },
+        "retrieved_date": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "original"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "name"
+                  ]
+                },
+                {
+                  "required": [
+                    "url"
+                  ]
+                },
+                {
+                  "required": [
+                    "license"
+                  ]
+                },
+                {
+                  "required": [
+                    "retrieved_date"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "third_party",
+                  "public_domain"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "name",
+              "url",
+              "license",
+              "retrieved_date"
+            ]
+          }
+        }
+      ]
+    },
+    "license": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9.+-]+$",
+      "description": "License under which this item is redistributed in the dataset (SPDX id)."
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "description": "Author-assigned rough difficulty; not empirically calibrated."
+    },
+    "tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "valid_as_of": {
+      "type": "string",
+      "format": "date",
+      "description": "Date until which a time-sensitive answer is known to be valid."
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Reliable sources the answer key was checked against (required for general_knowledge, turkish_grammar and factual_accuracy items of the real dataset). For dictionary/orthography sources such as TDK record the edition or the access date.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "accessed_date"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "edition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accessed_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewed"
+      ],
+      "description": "reviewed=true means a HUMAN, independent of the question author, checked both the answer key and the question content. Programmatic checks (reference solution passing its tests, computed values, schema validation) are separate and NEVER set reviewed.",
+      "properties": {
+        "reviewed": {
+          "type": "boolean"
+        },
+        "reviewer_type": {
+          "const": "human"
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Pseudonymous reviewer id; no personal data."
+        },
+        "independent": {
+          "const": true,
+          "description": "Reviewer is not the question's author."
+        },
+        "checked": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "answer_key",
+            "question_content"
+          ],
+          "properties": {
+            "answer_key": {
+              "const": true
+            },
+            "question_content": {
+              "const": true
+            }
+          }
+        },
+        "method": {
+          "enum": [
+            "source_checked",
+            "worked_solution_checked",
+            "expert_review"
+          ]
+        },
+        "reviewed_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "reviewed"
+            ],
+            "properties": {
+              "reviewed": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reviewer_type",
+              "reviewer",
+              "independent",
+              "checked",
+              "method",
+              "reviewed_date"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "reviewed"
+            ],
+            "properties": {
+              "reviewed": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "reviewer_type"
+                  ]
+                },
+                {
+                  "required": [
+                    "reviewer"
+                  ]
+                },
+                {
+                  "required": [
+                    "independent"
+                  ]
+                },
+                {
+                  "required": [
+                    "checked"
+                  ]
+                },
+                {
+                  "required": [
+                    "method"
+                  ]
+                },
+                {
+                  "required": [
+                    "reviewed_date"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "enum": [
+        "active",
+        "deprecated"
+      ]
+    },
+    "added_in": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "split": {
+      "enum": [
+        "pilot",
+        "fixture"
+      ],
+      "description": "pilot = real v0.1.0 dataset (public). fixture = test example, never part of the dataset. A private test set will be created separately later."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "question_type"
+        ],
+        "properties": {
+          "question_type": {
+            "const": "multiple_choice"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scoring": {
+            "properties": {
+              "method": {
+                "const": "multiple_choice_match"
+              },
+              "normalization": {
+                "enum": [
+                  "choice_label"
+                ]
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "tolerance"
+                  ]
+                },
+                {
+                  "required": [
+                    "rubric_id"
+                  ]
+                }
+              ]
+            }
+          },
+          "answer": {
+            "pattern": "^[A-E]$"
+          }
+        },
+        "required": [
+          "choices",
+          "answer"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "accepted_answers"
+              ]
+            },
+            {
+              "required": [
+                "code_spec"
+              ]
+            },
+            {
+              "required": [
+                "constraints"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "question_type"
+        ],
+        "properties": {
+          "question_type": {
+            "const": "short_answer"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scoring": {
+            "properties": {
+              "method": {
+                "const": "exact_match"
+              },
+              "normalization": {
+                "enum": [
+                  "tr_text",
+                  "tr_text_case_sensitive"
+                ]
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "tolerance"
+                  ]
+                },
+                {
+                  "required": [
+                    "rubric_id"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "answer"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "choices"
+              ]
+            },
+            {
+              "required": [
+                "code_spec"
+              ]
+            },
+            {
+              "required": [
+                "constraints"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "question_type"
+        ],
+        "properties": {
+          "question_type": {
+            "const": "numeric"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scoring": {
+            "properties": {
+              "method": {
+                "const": "numeric_match"
+              },
+              "normalization": {
+                "enum": [
+                  "numeric"
+                ]
+              }
+            },
+            "required": [
+              "tolerance"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "rubric_id"
+                  ]
+                }
+              ]
+            }
+          },
+          "answer": {
+            "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+          }
+        },
+        "required": [
+          "answer"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "choices"
+              ]
+            },
+            {
+              "required": [
+                "accepted_answers"
+              ]
+            },
+            {
+              "required": [
+                "code_spec"
+              ]
+            },
+            {
+              "required": [
+                "constraints"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "question_type"
+        ],
+        "properties": {
+          "question_type": {
+            "const": "code"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scoring": {
+            "properties": {
+              "method": {
+                "const": "unit_tests"
+              },
+              "normalization": {
+                "enum": [
+                  "none"
+                ]
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "tolerance"
+                  ]
+                },
+                {
+                  "required": [
+                    "rubric_id"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "code_spec"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "choices"
+              ]
+            },
+            {
+              "required": [
+                "answer"
+              ]
+            },
+            {
+              "required": [
+                "accepted_answers"
+              ]
+            },
+            {
+              "required": [
+                "constraints"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "question_type"
+        ],
+        "properties": {
+          "question_type": {
+            "const": "constraint_check"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scoring": {
+            "properties": {
+              "method": {
+                "const": "constraint_check"
+              },
+              "normalization": {
+                "enum": [
+                  "none"
+                ]
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "tolerance"
+                  ]
+                },
+                {
+                  "required": [
+                    "rubric_id"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "constraints"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "choices"
+              ]
+            },
+            {
+              "required": [
+                "answer"
+              ]
+            },
+            {
+              "required": [
+                "accepted_answers"
+              ]
+            },
+            {
+              "required": [
+                "code_spec"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "question_type"
+        ],
+        "properties": {
+          "question_type": {
+            "const": "open_ended"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "scoring": {
+            "properties": {
+              "method": {
+                "const": "rubric"
+              },
+              "normalization": {
+                "enum": [
+                  "none"
+                ]
+              }
+            },
+            "required": [
+              "rubric_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "tolerance"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "choices"
+              ]
+            },
+            {
+              "required": [
+                "answer"
+              ]
+            },
+            {
+              "required": [
+                "accepted_answers"
+              ]
+            },
+            {
+              "required": [
+                "code_spec"
+              ]
+            },
+            {
+              "required": [
+                "constraints"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "choices"
+        ],
+        "properties": {
+          "choices": {
+            "maxItems": 2
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "enum": [
+              "A",
+              "B"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "choices"
+        ],
+        "properties": {
+          "choices": {
+            "maxItems": 3
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "choices"
+        ],
+        "properties": {
+          "choices": {
+            "maxItems": 4
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "turkish_language_understanding"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^TLU-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "logical_reasoning"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^LOG-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "mathematics"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^MAT-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "general_knowledge"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^GKN-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "coding"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^COD-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "instruction_following"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^IFL-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "turkish_grammar"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^GRM-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "reading_comprehension"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^RCP-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "creative_writing"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^CRW-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category"
+        ],
+        "properties": {
+          "category": {
+            "const": "factual_accuracy"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "id": {
+            "pattern": "^FAC-"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "pattern": "-9[0-9]{2}$"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "split": {
+            "const": "fixture"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "split": {
+            "const": "pilot"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "original"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "license": {
+            "const": "Apache-2.0"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "category",
+          "split"
+        ],
+        "properties": {
+          "category": {
+            "enum": [
+              "general_knowledge",
+              "turkish_grammar",
+              "factual_accuracy"
+            ]
+          },
+          "split": {
+            "const": "pilot"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "references"
+        ]
+      }
+    }
+  ]
+}
