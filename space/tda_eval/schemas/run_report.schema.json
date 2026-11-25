@@ -1,0 +1,863 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://huggingface.co/spaces/TDA/TDA-Eval/run_report.schema.json",
+  "title": "TDA Eval Run Report (schema 1.0.0)",
+  "description": "Record of ONE evaluation run. Summary metrics are not stored; they are recomputed from 'results'. Automatic, LLM-judge and human scores live in separate fields and are never merged. v0.1.0 LIMITS: n_samples is fixed to 1 (sample_index is always 0); at most ONE human rating per result ('human' is a single object; multiple raters would require schema 2.0 where it becomes an array). Cross-field consistency (duplicate ids, counts, rubric scales, null rules) is enforced by tda_eval/validators.py:validate_run_report. 'format' keywords need tda_eval.validators.FORMAT_CHECKER.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "tda_eval_version",
+    "dataset",
+    "model",
+    "generation",
+    "selection",
+    "judge",
+    "human_evaluation",
+    "results"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{8,80}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC timestamp ending in 'Z', e.g. 2026-11-23T20:40:00Z."
+    },
+    "tda_eval_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "revision",
+        "split"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Repository commit hash if known, else null."
+        },
+        "split": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "model_id",
+        "model_version",
+        "model_revision",
+        "endpoint_host"
+      ],
+      "description": "What the USER asked to evaluate. What the provider reports back is in generation.reported.",
+      "properties": {
+        "provider": {
+          "enum": [
+            "hf_inference_providers",
+            "openai_compatible",
+            "other"
+          ]
+        },
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Version known to the user, or the literal 'unreported'. Never guessed."
+        },
+        "model_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "endpoint_host": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Za-z0-9.-]+(:[0-9]{1,5})?$",
+          "description": "Host name only. URLs, paths, credentials and tokens are never stored."
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_samples",
+        "prompt_template_id",
+        "system_prompt_sha256",
+        "requested",
+        "reported"
+      ],
+      "properties": {
+        "n_samples": {
+          "const": 1,
+          "description": "v0.1.0: exactly one sample per question."
+        },
+        "prompt_template_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "system_prompt_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "requested": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "temperature",
+            "top_p",
+            "max_tokens",
+            "seed"
+          ],
+          "description": "Parameters TDA Eval SENT in the request. null = not sent.",
+          "properties": {
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "top_p": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "max_tokens": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "seed": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        },
+        "reported": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "served_model_id",
+            "model_version",
+            "temperature",
+            "top_p",
+            "max_tokens",
+            "seed",
+            "system_fingerprint"
+          ],
+          "description": "Parameters the PROVIDER says it actually used. status=unreported means the provider returned nothing usable and every field must be null (never copied from 'requested').",
+          "properties": {
+            "status": {
+              "enum": [
+                "reported",
+                "unreported"
+              ]
+            },
+            "served_model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "model_version": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "temperature": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 2
+            },
+            "top_p": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "max_tokens": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "seed": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "system_fingerprint": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "unreported"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "served_model_id": {
+                    "type": "null"
+                  },
+                  "model_version": {
+                    "type": "null"
+                  },
+                  "temperature": {
+                    "type": "null"
+                  },
+                  "top_p": {
+                    "type": "null"
+                  },
+                  "max_tokens": {
+                    "type": "null"
+                  },
+                  "seed": {
+                    "type": "null"
+                  },
+                  "system_fingerprint": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "categories",
+        "question_count"
+      ],
+      "properties": {
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "turkish_language_understanding",
+              "logical_reasoning",
+              "mathematics",
+              "general_knowledge",
+              "coding",
+              "instruction_following",
+              "turkish_grammar",
+              "reading_comprehension",
+              "creative_writing",
+              "factual_accuracy"
+            ]
+          }
+        },
+        "question_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "judge": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "null when no LLM judge was used (judge is optional).",
+      "required": [
+        "provider",
+        "model_id",
+        "model_version",
+        "temperature",
+        "rubric_ids",
+        "rubric_versions",
+        "judge_prompt_sha256"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "rubric_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rubric_versions": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "judge_prompt_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "human_evaluation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "null when no human rating was made (optional). v0.1.0 supports exactly ONE rating per result; multi-rater support needs schema 2.0.",
+      "required": [
+        "raters_per_item",
+        "rubric_ids",
+        "rubric_versions",
+        "guidelines_version"
+      ],
+      "properties": {
+        "raters_per_item": {
+          "const": 1
+        },
+        "rubric_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rubric_versions": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "guidelines_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "question_id",
+          "sample_index",
+          "category",
+          "status",
+          "response",
+          "error",
+          "latency_ms",
+          "finish_reason",
+          "response_chars",
+          "response_words",
+          "automatic",
+          "judge",
+          "judge_error",
+          "human"
+        ],
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "pattern": "^(TLU|LOG|MAT|GKN|COD|IFL|GRM|RCP|CRW|FAC)-(00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})$"
+          },
+          "sample_index": {
+            "const": 0,
+            "description": "Always 0 while n_samples=1; (question_id, sample_index) is the unique key."
+          },
+          "category": {
+            "enum": [
+              "turkish_language_understanding",
+              "logical_reasoning",
+              "mathematics",
+              "general_knowledge",
+              "coding",
+              "instruction_following",
+              "turkish_grammar",
+              "reading_comprehension",
+              "creative_writing",
+              "factual_accuracy"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "response": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Raw model output; never normalized."
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "timeout",
+                  "rate_limit",
+                  "auth_error",
+                  "network_error",
+                  "provider_error",
+                  "invalid_response",
+                  "other"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Short diagnostic. Must not contain keys or tokens."
+              }
+            }
+          },
+          "latency_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "finish_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "response_chars": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "response_words": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "automatic": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "method",
+              "status",
+              "score",
+              "passed",
+              "parse_status",
+              "parsed_answer",
+              "normalization",
+              "flags",
+              "details"
+            ],
+            "description": "null for rubric (open-ended) items and for failed (status=error) results.",
+            "properties": {
+              "method": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "scored",
+                  "scoring_error"
+                ]
+              },
+              "score": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "passed": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "parse_status": {
+                "enum": [
+                  "parsed",
+                  "ambiguous",
+                  "invalid_format",
+                  "invalid_label",
+                  "multiple_numbers",
+                  "not_applicable"
+                ]
+              },
+              "parsed_answer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "normalization": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "flags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "details": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tests_total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "tests_passed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "constraints_total": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "constraints_passed": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "judge": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "rubric_id",
+              "rubric_version",
+              "score",
+              "criteria_scores",
+              "rationale"
+            ],
+            "properties": {
+              "rubric_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rubric_version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "criteria_scores": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "description": "criterion id -> integer score on the rubric's scale (validated against categories.json)."
+              },
+              "rationale": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "judge_error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the judge produced no score for this result."
+          },
+          "human": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "description": "Single human rating (v0.1.0 limit: one rater per result).",
+            "required": [
+              "rubric_id",
+              "rubric_version",
+              "score",
+              "criteria_scores",
+              "rater_id",
+              "rated_at"
+            ],
+            "properties": {
+              "rubric_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rubric_version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "criteria_scores": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "description": "criterion id -> integer score on the rubric's scale (validated against categories.json)."
+              },
+              "rater_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Pseudonym, no personal data."
+              },
+              "rated_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "Z$",
+                "description": "UTC timestamp ending in 'Z', e.g. 2026-11-23T20:40:00Z."
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "ok"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "error": {
+                  "type": "null"
+                },
+                "response": {
+                  "type": "string"
+                },
+                "response_chars": {
+                  "type": "integer"
+                },
+                "response_words": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "error"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "error": {
+                  "type": "object"
+                },
+                "response": {
+                  "type": "null"
+                },
+                "response_chars": {
+                  "type": "null"
+                },
+                "response_words": {
+                  "type": "null"
+                },
+                "finish_reason": {
+                  "type": "null"
+                },
+                "automatic": {
+                  "type": "null"
+                },
+                "judge": {
+                  "type": "null"
+                },
+                "judge_error": {
+                  "type": "null"
+                },
+                "human": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "automatic"
+              ],
+              "properties": {
+                "automatic": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "scored"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "automatic": {
+                  "properties": {
+                    "score": {
+                      "type": "number"
+                    },
+                    "passed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "automatic"
+              ],
+              "properties": {
+                "automatic": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "scoring_error"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "automatic": {
+                  "properties": {
+                    "score": {
+                      "type": "null"
+                    },
+                    "passed": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
