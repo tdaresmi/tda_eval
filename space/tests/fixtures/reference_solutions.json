@@ -1,0 +1,4 @@
+{
+  "_note": "Reference solutions for FIXTURE code questions only. Passing the tests is a programmatic check, never a human review.",
+  "COD-900": "def cift_toplam(liste):\n    return sum(x for x in liste if x % 2 == 0)\n"
+}
